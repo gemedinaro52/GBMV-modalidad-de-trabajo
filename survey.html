@@ -181,7 +181,7 @@
 
   /* Scale */
   .scale-wrap { display: flex; flex-direction: column; gap: 10px; }
-  .scale-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-light); padding: 0 2px; }
+  .scale-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-mid); padding: 6px 2px 0; font-style: italic; }
   .scale-row { display: flex; gap: 8px; }
   .scale-btn {
     flex: 1; padding: 14px 6px; border: 1.5px solid var(--border);
@@ -489,12 +489,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (params.get('d')) {
     try {
-      payload = JSON.parse(decodeURIComponent(escape(atob(params.get('d')))));
+      // Try standard base64 decode first
+      const decoded = decodeURIComponent(escape(atob(params.get('d'))));
+      payload = JSON.parse(decoded);
     } catch(e) { showScreen('error'); return; }
   } else if (params.get('k')) {
     try {
+      // Fallback: localStorage key (same browser only)
       const stored = localStorage.getItem(params.get('k'));
-      if (!stored) { showScreen('error'); return; }
+      if (!stored) {
+        // Show a more helpful error for cross-device links
+        document.querySelector('#screen-error .error-title').textContent = 'Este enlace no se puede abrir aquí';
+        document.querySelector('#screen-error .error-msg').textContent = 'El enlace que recibiste fue generado en otra computadora y no puede abrirse en este dispositivo. Por favor pide al equipo de Factor Humano que te envíe un enlace nuevo.';
+        showScreen('error'); return;
+      }
       payload = JSON.parse(stored);
     } catch(e) { showScreen('error'); return; }
   } else {
@@ -587,16 +595,18 @@ function renderQuestion() {
         </div>`).join('') +
       `</div>`;
   } else if (q.type === 'scale') {
+    const scaleMin = q.scaleMin || 'Menor grado';
+    const scaleMax = q.scaleMax || 'Mayor grado';
     inputHTML = `
       <div class="scale-wrap">
-        <div class="scale-ends">
-          <span>${q.scaleMin || 'Nunca / Nada'}</span>
-          <span>${q.scaleMax || 'Siempre / Todo'}</span>
-        </div>
         <div class="scale-row">
           ${[1,2,3,4,5].map(n => `
             <button class="scale-btn ${ans === n ? 'sel' : ''}" onclick="pickScale('${q.id}', ${n})">${n}</button>
           `).join('')}
+        </div>
+        <div class="scale-ends">
+          <span>1 = ${scaleMin}</span>
+          <span>5 = ${scaleMax}</span>
         </div>
       </div>`;
   } else if (q.type === 'multi') {

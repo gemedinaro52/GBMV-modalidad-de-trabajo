@@ -514,21 +514,41 @@ ${fileContents.map((f,i) => `--- ARCHIVO ${i+1}: ${f.name} ---\n${f.content}`).j
 // ══════════════════════
 // RENDER LINKS
 // ══════════════════════
+function stripPayload(data) {
+  // Remove scoring arrays and metadata to minimize URL size
+  return {
+    ...data,
+    jobs: data.jobs.map(j => ({
+      jobName: j.jobName,
+      jobSummary: j.jobSummary,
+      questions: j.questions.map(q => ({
+        id: q.id,
+        text: q.text,
+        type: q.type,
+        options: q.options,
+        scaleMin: q.scaleMin || null,
+        scaleMax: q.scaleMax || null,
+        variable: q.variable,
+        scoring: q.scoring,
+        isCalibration: q.isCalibration || false
+      }))
+    }))
+  };
+}
+
 function renderLinks(data, name, email) {
   const baseUrl = window.location.href.replace('admin.html', 'survey.html');
-  const payload = { leaderName: name, leaderEmail: email, jobs: data.jobs };
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const payload = { leaderName: name, leaderEmail: email, jobs: stripPayload(data).jobs };
 
-  // Split into chunks if too long for URL (use localStorage as fallback)
+  // Always encode into URL — strip whitespace from JSON to minimize size
+  const json = JSON.stringify(payload);
+  const encoded = btoa(unescape(encodeURIComponent(json)));
   const surveyUrl = `${baseUrl}?d=${encoded}`;
-  const isTooLong = surveyUrl.length > 8000;
 
-  let finalUrl = surveyUrl;
-  if (isTooLong) {
-    // Store in localStorage with a key
-    const key = 'survey_' + Date.now();
-    localStorage.setItem(key, JSON.stringify(payload));
-    finalUrl = `${baseUrl}?k=${key}`;
+  // Warn if URL is very long (>15000 chars) but still use it
+  const finalUrl = surveyUrl;
+  if (surveyUrl.length > 15000) {
+    console.warn('URL muy larga:', surveyUrl.length, 'chars — considera reducir número de puestos');
   }
 
   const jobNames = data.jobs.map(j => j.jobName).join(', ');
