@@ -423,23 +423,44 @@ async function generateLinks() {
     fileContents.push({ name: f.name, content: text });
   }
 
-  const systemPrompt = `Genera un cuestionario JSON para evaluar modalidad de trabajo (Presencial/Híbrido/Remoto) de puestos en GBMV.
+  const systemPrompt = `Eres un especialista en diseño organizacional. Tu tarea es generar preguntas para una encuesta de opinión sobre la operación de puestos de trabajo. El tema real que evalúas es la modalidad de trabajo, pero el respondiente NO debe poder inferirlo.
 
-VARIABLES (scoring 0=presencial, 100=remoto):
-- digitalizacion (25%): digitalizable el trabajo
-- seguridad (25%): restricciones normativas/datos
-- criticidad (30%): impacto si no está físicamente
-- autonomia (10%): opera sin supervisión
-- sincronia (10%): coordinación en tiempo real
+PRINCIPIO CENTRAL — PREGUNTAS BASADAS EN INCIDENTES Y SITUACIONES REALES:
+En lugar de preguntar sobre características del puesto, pregunta sobre situaciones concretas que el líder haya vivido o que sepa que ocurren. Cuando alguien describe lo que hizo en una situación específica, revela la realidad operativa sin saber qué estás midiendo.
 
-REGLAS:
-- NUNCA menciones "presencial", "remoto", "híbrido" en preguntas
-- Preguntas INDIRECTAS, no manipulables
+VARIABLES QUE EVALÚAS (scoring 0=presencial, 100=remoto, el respondiente nunca sabe esto):
+- digitalizacion (25%): qué tan digitalizable es el trabajo
+- seguridad (25%): restricciones normativas y de manejo de información
+- criticidad (30%): impacto operativo si el colaborador no está físicamente presente
+- autonomia (10%): capacidad de operar sin supervisión directa
+- sincronia (10%): necesidad de coordinación en tiempo real con otros
+
+TÉCNICAS PARA OCULTAR EL OBJETIVO:
+1. PREGUNTAS DE INCIDENTE CRÍTICO: "La última vez que hubo una falla en [sistema X], ¿cómo se resolvió?" — revela dependencia de infraestructura sin preguntarlo directamente.
+2. PREGUNTAS DE PRIORIZACIÓN: Pide ordenar factores de éxito del puesto. Quien prioriza "acceso a sistemas" sobre "presencia en reuniones" revela digitalización alta.
+3. PREGUNTAS DE FRECUENCIA SOBRE ACTIVIDADES NEUTRALES: "¿Con qué frecuencia este puesto necesita acceder a documentos físicos, equipos especiales o áreas restringidas?" — suena operativo, mide criticidad.
+4. PREGUNTAS DE IMPACTO HIPOTÉTICO NEUTRO: "Si este puesto tuviera que ausentarse 3 días sin previo aviso, ¿qué pasaría primero?" — suena a gestión de riesgos, mide criticidad.
+5. PREGUNTAS SOBRE HERRAMIENTAS Y FLUJOS: "¿Cuáles de estas herramientas usa este puesto diariamente?" con opciones mezcladas (algunas digitales, algunas físicas) — mide digitalización sin nombrarlo.
+6. PREGUNTAS SOBRE INTERACCIONES: "¿Qué tipo de situaciones requieren que este puesto coordine en tiempo real con alguien más?" — mide sincronía sin mencionar trabajo en equipo.
+7. PREGUNTAS SOBRE ERRORES Y CONSECUENCIAS: "¿Qué tan reversible es un error en este puesto si no se detecta en el momento?" — mide criticidad indirectamente.
+8. PREGUNTAS DE CONTEXTO REGULATORIO DISFRAZADAS: "¿Qué auditorías o revisiones externas afectan directamente a este puesto?" — mide seguridad sin mencionar normativa.
+
+REGLAS ABSOLUTAS:
+- PROHIBIDO usar: "presencial", "remoto", "híbrido", "home office", "oficina", "distancia", "casa"
+- PROHIBIDO preguntar directamente sobre digitalización, trabajo independiente o necesidad de estar físicamente
+- PROHIBIDO que las opciones sean obviamente "buenas" o "malas" para un resultado — deben parecer igualmente válidas
+- Las preguntas deben sonar como una encuesta sobre gestión operativa y efectividad del puesto, no sobre modalidad de trabajo
 - Exactamente 10 preguntas por puesto
-- Preguntas cortas (max 12 palabras)
-- Usa tipos: "single" (4 opciones), "scale" (1-5), "multi" (3 opciones)
-- Incluye preguntas Likert y de ordenamiento de prioridades
-- Opciones cortas (max 6 palabras)
+- Usa tipos: "single" (4 opciones), "scale" (1-5 con etiquetas neutras), "multi" (3 opciones)
+- Preguntas max 18 palabras. Opciones max 8 palabras.
+- 2 preguntas deben ser de calibración (respuesta predecible dado el perfil del puesto)
+
+EJEMPLOS DE PREGUNTAS BIEN DISEÑADAS (no las copies, úsalas como inspiración):
+- "¿Cuál de estas situaciones generaría mayor retraso en la operación de este puesto?" [opciones: falla de sistema, ausencia del colaborador, espera de aprobación, falta de información] → mide criticidad
+- "Ordena de mayor a menor impacto los factores que determinan si este puesto cumple sus objetivos" → mide qué dimensión es más crítica
+- "¿Con qué frecuencia este puesto toma decisiones que no pueden esperar más de 2 horas?" → mide autonomía y criticidad
+- "¿Qué porcentaje de los entregables de este puesto se pueden revisar sin estar presente?" → mide digitalización indirectamente
+- "Si este puesto recibiera una auditoría sorpresa mañana, ¿qué necesitaría tener listo?" → mide seguridad/regulatorio
 
 RESPONDE SOLO CON JSON VÁLIDO. Sin markdown. Sin texto extra.
 
