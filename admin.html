@@ -553,6 +553,12 @@ function renderLinks(data, name, email) {
 
   const jobNames = data.jobs.map(j => j.jobName).join(', ');
 
+  const urlLen = finalUrl.length;
+  const lenWarning = urlLen > 8000
+    ? `<div style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.4);border-radius:10px;padding:12px 16px;font-size:13px;color:#8a6820;margin-bottom:14px;">
+        ⚠️ El enlace es largo (${urlLen} caracteres). <strong>No lo pegues en el cuerpo del correo</strong> — usa el botón "Abrir borrador" o cópialo y pégalo desde ahí. Los clientes de correo pueden truncarlo.
+       </div>` : '';
+
   const container = document.getElementById('links-container');
   container.innerHTML = `
     <div class="link-card">
@@ -566,9 +572,14 @@ function renderLinks(data, name, email) {
       <div class="link-card-jobs">
         <strong>Puestos a evaluar:</strong> ${jobNames}
       </div>
-      <div class="link-box" id="link-url">${finalUrl}</div>
+      ${lenWarning}
+      <input type="text" id="link-url-input" value="${finalUrl}"
+        style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;
+               font-family:monospace;font-size:12px;color:var(--text-mid);background:var(--cream);
+               margin-bottom:14px;cursor:pointer;"
+        readonly onclick="this.select()" />
       <div class="link-actions">
-        <button class="btn-copy" id="btn-copy" onclick="copyLink('${finalUrl}')">
+        <button class="btn-copy" id="btn-copy" onclick="copyLink()">
           📋 Copiar enlace
         </button>
         <button class="btn-email" onclick="openEmailDraft('${name}', '${email}', '${finalUrl}')">
@@ -582,7 +593,8 @@ function renderLinks(data, name, email) {
   document.getElementById('links-section').scrollIntoView({ behavior: 'smooth' });
 }
 
-function copyLink(url) {
+function copyLink() {
+  const url = document.getElementById('link-url-input').value;
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('btn-copy');
     btn.textContent = '✓ Copiado';
