@@ -361,17 +361,38 @@ function renderFileList() {
 }
 
 // ══════════════════════
-// READ FILE
+// READ FILE — solo Misión y Funciones
 // ══════════════════════
 async function readFileAsText(file) {
   return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = e => {
       const raw = e.target.result || '';
-      // Strip binary noise, keep readable chars
-      const clean = raw.replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, ' ')
-                       .replace(/\s{3,}/g, '  ').trim();
-      resolve(clean.slice(0, 10000));
+
+      // Limpiar ruido binario, conservar caracteres legibles en español
+      const clean = raw
+        .replace(/[^\x0A\x0D\x20-\x7E\xC0-\xFF]/g, ' ')
+        .replace(/[A-Za-z0-9]{40,}/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      let extracted = '';
+
+      // Extraer sección MISIÓN / OBJETIVO DEL PUESTO
+      const misionMatch = clean.match(/(?:MISI[OÓ]N|OBJETIVO DEL PUESTO)[\s\S]{0,10}?[:\s]+([\s\S]{30,500}?)(?=FUNCIONES DEL PUESTO|[A-ZÁÉÍÓÚ]{4,}[\s:]|$)/i);
+      if (misionMatch) extracted += 'MISION: ' + misionMatch[1].trim() + '\n\n';
+
+      // Extraer sección FUNCIONES DEL PUESTO
+      const funcMatch = clean.match(/FUNCIONES DEL PUESTO[\s\S]{0,10}?[:\s]+([\s\S]{30,1500}?)(?=CONOCIMIENTOS|HABILIDADES|REQUISITOS|ESCOLARIDAD|COMPETENCIAS|[A-ZÁÉÍÓÚ]{5,}[\s:]|$)/i);
+      if (funcMatch) extracted += 'FUNCIONES: ' + funcMatch[1].trim();
+
+      // Fallback si no se encontraron secciones
+      if (!extracted || extracted.length < 60) {
+        const words = clean.split(' ').filter(w => w.length >= 3 && w.length <= 30 && /[a-záéíóúüñA-ZÁÉÍÓÚÜÑ]/.test(w));
+        extracted = words.slice(0, 300).join(' ');
+      }
+
+      resolve(extracted.slice(0, 2500));
     };
     reader.onerror = () => resolve('(No se pudo leer el archivo)');
     reader.readAsText(file, 'UTF-8');
@@ -402,60 +423,27 @@ async function generateLinks() {
     fileContents.push({ name: f.name, content: text });
   }
 
-  const systemPrompt = `Eres el motor de inteligencia de una herramienta de evaluación de modalidad de trabajo para el Grupo Bolsa Mexicana de Valores (GBMV).
+  const systemPrompt = `Genera un cuestionario JSON para evaluar modalidad de trabajo (Presencial/Híbrido/Remoto) de puestos en GBMV.
 
-Tu tarea es generar un cuestionario estructurado y adaptativo para un líder, con el objetivo de determinar la modalidad de trabajo más adecuada (Presencial, Híbrido o Remoto) para cada puesto analizado.
+VARIABLES (scoring 0=presencial, 100=remoto):
+- digitalizacion (25%): digitalizable el trabajo
+- seguridad (25%): restricciones normativas/datos
+- criticidad (30%): impacto si no está físicamente
+- autonomia (10%): opera sin supervisión
+- sincronia (10%): coordinación en tiempo real
 
-VARIABLES DE EVALUACIÓN Y PONDERACIONES:
-- Digitalización (25%): Qué tan digitalizable es el trabajo del puesto
-- Seguridad y Regulación (25%): Restricciones normativas y de manejo de información
-- Criticidad Operativa (30%): Impacto en la continuidad si el colaborador no está físicamente presente
-- Autonomía Operativa (10%): Capacidad de operar sin supervisión física
-- Sincronía / Interdependencia (10%): Necesidad de coordinación en tiempo real
+REGLAS:
+- NUNCA menciones "presencial", "remoto", "híbrido" en preguntas
+- Preguntas INDIRECTAS, no manipulables
+- Exactamente 10 preguntas por puesto
+- Preguntas cortas (max 12 palabras)
+- Usa tipos: "single" (4 opciones), "scale" (1-5), "multi" (3 opciones)
+- Incluye preguntas Likert y de ordenamiento de prioridades
+- Opciones cortas (max 6 palabras)
 
-REGLAS CRÍTICAS:
-1. NUNCA uses las palabras "presencial", "remoto", "híbrido" en las preguntas
-2. NUNCA preguntes de forma obvia (NO: "¿puede trabajar desde casa?", "¿necesita estar en oficina?")
-3. Las preguntas deben ser INDIRECTAS para que el líder no pueda manipular el resultado
-4. Genera entre 8 y 14 preguntas por puesto (las mínimas necesarias para evaluar las 5 variables)
-5. Tono ejecutivo en español. Preguntas CORTAS máximo 15 palabras. Opciones máximo 7 palabras.
-6. Incluye 2 preguntas de calibración. jobSummary máximo 15 palabras.
-7. Genera máximo 10 preguntas por puesto para mantener el JSON compacto.
+RESPONDE SOLO CON JSON VÁLIDO. Sin markdown. Sin texto extra.
 
-REGLAS DE SCORING (0=presencial, 100=remoto):
-- Para variables restrictivas (seguridad, criticidad): puntuación alta = baja restricción = más apto para remoto
-- Para variables habilitadoras (digitalización, autonomía): puntuación alta = más apto para remoto
-- Para sincronía: puntuación alta = baja interdependencia = más apto para remoto
-
-RESPONDE ÚNICAMENTE CON JSON VÁLIDO. Sin texto antes ni después. Sin bloques de código markdown. Solo el objeto JSON.
-
-Estructura exacta:
-{
-  "jobs": [
-    {
-      "jobName": "Nombre del puesto",
-      "jobSummary": "Resumen de 1-2 oraciones del puesto",
-      "questions": [
-        {
-          "id": "P01",
-          "text": "Texto de la pregunta",
-          "type": "single",
-          "options": ["Opción A", "Opción B", "Opción C", "Opción D"],
-          "scaleMin": null,
-          "scaleMax": null,
-          "variable": "digitalizacion",
-          "scoring": [25, 50, 75, 100],
-          "isCalibration": false
-        }
-      ]
-    }
-  ]
-}
-
-Para type="scale": options=["1","2","3","4","5"], scoring tiene 5 valores, scaleMin y scaleMax son etiquetas de texto.
-Para type="single": scoring tiene un valor por opción (0-100).
-Para type="multi": máximo 3 opciones, scoring tiene un valor por opción.
-variable debe ser exactamente uno de: digitalizacion, seguridad, criticidad, autonomia, sincronia`;
+{"jobs":[{"jobName":"str","jobSummary":"str max 10 palabras","questions":[{"id":"P01","text":"str","type":"single","options":["A","B","C","D"],"scaleMin":null,"scaleMax":null,"variable":"digitalizacion","scoring":[0,33,66,100],"isCalibration":false}]}]}`
 
   const userMsg = `Analiza las siguientes descripciones de puesto y genera el cuestionario.
 
