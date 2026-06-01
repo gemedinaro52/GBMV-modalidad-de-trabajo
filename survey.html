@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GBMV · Factor Humano</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a1628;
+    --navy-mid: #132040;
+    --navy-light: #1e3260;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-pale: #f5ecd4;
+    --cream: #faf7f2;
+    --white: #ffffff;
+    --text: #1a2540;
+    --text-mid: #3d5278;
+    --text-light: #7a8fb5;
+    --border: #dde3f0;
+    --success: #1a7f5a;
+    --radius: 12px;
+    --shadow: 0 4px 32px rgba(10,22,40,0.10);
+    --shadow-lg: 0 12px 64px rgba(10,22,40,0.18);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--navy); padding: 16px 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid var(--gold);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 14px; }
+  .topbar-logo {
+    width: 34px; height: 34px; background: var(--gold); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--navy);
+  }
+  .topbar-title { font-family: 'Playfair Display', serif; font-size: 15px; color: var(--white); }
+  .topbar-sub { font-size: 11px; color: var(--gold-light); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 1px; }
+
+  /* ── WELCOME SCREEN ── */
+  #screen-welcome {
+    background: var(--navy);
+    align-items: center; justify-content: center;
+  }
+  .welcome-inner {
+    max-width: 560px; padding: 48px; text-align: center;
+  }
+  .welcome-badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    color: var(--gold); border: 1px solid rgba(201,168,76,0.35);
+    padding: 5px 16px; border-radius: 20px; letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 28px;
+  }
+  .welcome-greeting { font-size: 15px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+  .welcome-name {
+    font-family: 'Playfair Display', serif; font-size: 40px;
+    color: var(--white); margin-bottom: 24px; line-height: 1.15;
+  }
+  .welcome-desc {
+    font-size: 16px; color: rgba(255,255,255,0.65);
+    line-height: 1.7; margin-bottom: 12px;
+  }
+  .welcome-meta {
+    font-size: 13px; color: rgba(201,168,76,0.7);
+    margin-bottom: 40px; line-height: 1.6;
+  }
+  .welcome-jobs {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; padding: 20px 24px; margin-bottom: 36px;
+    text-align: left;
+  }
+  .welcome-jobs-title {
+    font-size: 11px; font-weight: 600; color: var(--gold);
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px;
+  }
+  .welcome-job-item {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; color: rgba(255,255,255,0.8);
+    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .welcome-job-item:last-child { border-bottom: none; }
+  .job-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+  .btn-start {
+    padding: 16px 48px; background: var(--gold);
+    color: var(--navy); border: none; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .btn-start:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+  /* ── SURVEY SCREEN ── */
+  #screen-survey { background: var(--cream); }
+  .survey-layout {
+    flex: 1; display: grid;
+    grid-template-columns: 280px 1fr;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--navy); padding: 36px 28px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .sidebar-leader-label { font-size: 11px; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .sidebar-leader-name { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--white); line-height: 1.3; }
+  .sidebar-divider { height: 1px; background: rgba(255,255,255,0.08); }
+  .sidebar-section { font-size: 10px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+  .sidebar-job {
+    padding: 12px 14px; border-radius: 10px;
+    border: 1px solid transparent; margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  .sidebar-job.active { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.25); }
+  .sidebar-job.done { background: rgba(26,127,90,0.1); border-color: rgba(26,127,90,0.2); }
+  .sidebar-job-name { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.85); line-height: 1.4; }
+  .sidebar-job-status { font-size: 11px; color: var(--text-light); margin-top: 3px; }
+  .sidebar-job.active .sidebar-job-status { color: var(--gold-light); }
+  .sidebar-job.done .sidebar-job-status { color: #5ec49a; }
+  .sidebar-progress { margin-top: auto; }
+  .progress-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-light); margin-bottom: 8px; }
+  .progress-track { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.5s ease; }
+
+  /* Main area */
+  .survey-main {
+    padding: 48px; overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+  .survey-main-inner {
+    max-width: 640px; width: 100%; margin: 0 auto; flex: 1;
+  }
+
+  /* Job header */
+  .job-header { margin-bottom: 36px; }
+  .job-eyebrow { font-size: 11px; font-weight: 600; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .job-title { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--navy); margin-bottom: 10px; }
+  .job-summary { font-size: 14px; color: var(--text-mid); line-height: 1.6; }
+
+  /* Question */
+  .q-card {
+    background: var(--white); border-radius: 16px; padding: 36px 40px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+    margin-bottom: 20px; animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .q-num { font-size: 11px; font-weight: 600; color: var(--text-light); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .q-text { font-size: 19px; color: var(--navy); line-height: 1.5; font-weight: 400; margin-bottom: 28px; }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 18px; border: 1.5px solid var(--border);
+    border-radius: 10px; cursor: pointer; transition: all 0.18s; user-select: none;
+  }
+  .opt:hover { border-color: var(--gold); background: var(--gold-pale); }
+  .opt.sel { border-color: var(--navy); background: var(--navy); }
+  .opt.sel .opt-label { color: var(--white); }
+  .opt-radio {
+    width: 18px; height: 18px; border: 2px solid var(--border);
+    border-radius: 50%; flex-shrink: 0; margin-top: 2px;
+    transition: all 0.18s; display: flex; align-items: center; justify-content: center;
+  }
+  .opt.sel .opt-radio { border-color: var(--gold); background: var(--gold); }
+  .opt.sel .opt-radio::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--navy); }
+  .opt-label { font-size: 15px; color: var(--text); line-height: 1.4; }
+
+  /* Scale */
+  .scale-wrap { display: flex; flex-direction: column; gap: 10px; }
+  .scale-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-light); padding: 0 2px; }
+  .scale-row { display: flex; gap: 8px; }
+  .scale-btn {
+    flex: 1; padding: 14px 6px; border: 1.5px solid var(--border);
+    border-radius: 10px; background: var(--cream);
+    font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+    color: var(--text-mid); cursor: pointer; transition: all 0.18s; text-align: center;
+  }
+  .scale-btn:hover { border-color: var(--gold); background: var(--gold-pale); }
+  .scale-btn.sel { background: var(--navy); border-color: var(--navy); color: var(--white); }
+
+  /* Multi */
+  .multi { display: flex; flex-direction: column; gap: 10px; }
+  .multi-opt {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 18px; border: 1.5px solid var(--border);
+    border-radius: 10px; cursor: pointer; transition: all 0.18s; user-select: none;
+  }
+  .multi-opt:hover { border-color: var(--gold); background: var(--gold-pale); }
+  .multi-opt.sel { border-color: var(--navy-light); background: rgba(19,32,64,0.06); }
+  .multi-check {
+    width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px;
+    flex-shrink: 0; margin-top: 2px; transition: all 0.18s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .multi-opt.sel .multi-check { background: var(--navy); border-color: var(--navy); color: var(--white); }
+  .multi-opt.sel .multi-check::after { content: '✓'; }
+
+  /* Nav */
+  .q-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);
+  }
+  .btn-back {
+    padding: 12px 22px; background: transparent; border: 1.5px solid var(--border);
+    border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+    color: var(--text-mid); cursor: pointer; transition: all 0.2s;
+  }
+  .btn-back:hover { border-color: var(--text-mid); }
+  .btn-back:disabled { opacity: 0.3; cursor: default; }
+  .btn-next {
+    padding: 14px 34px; background: var(--navy); border: none; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    color: var(--white); cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-next:hover { background: var(--navy-mid); }
+  .btn-next:disabled { opacity: 0.35; cursor: default; }
+  .btn-next.finish { background: linear-gradient(135deg, #b8922e, var(--gold)); color: var(--navy); font-weight: 700; }
+  .btn-next.finish:hover { filter: brightness(1.05); }
+
+  /* Transition */
+  .transition-card {
+    background: linear-gradient(135deg, var(--navy), var(--navy-light));
+    border-radius: 16px; padding: 40px; text-align: center;
+    border: 1px solid rgba(201,168,76,0.2); margin-bottom: 20px;
+  }
+  .transition-card h3 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--gold-light); margin-bottom: 12px; }
+  .transition-card p { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+
+  /* ── THANKS SCREEN ── */
+  #screen-thanks {
+    background: var(--navy); align-items: center; justify-content: center; text-align: center;
+  }
+  .thanks-inner { max-width: 500px; padding: 48px; }
+  .thanks-check {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(201,168,76,0.12); border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px; margin: 0 auto 32px;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .thanks-title { font-family: 'Playfair Display', serif; font-size: 38px; color: var(--white); margin-bottom: 20px; }
+  .thanks-body { font-size: 16px; color: rgba(255,255,255,0.65); line-height: 1.75; margin-bottom: 10px; }
+  .thanks-close { font-size: 13px; color: rgba(201,168,76,0.6); margin-top: 32px; }
+
+  /* ── ERROR SCREEN ── */
+  #screen-error {
+    background: var(--navy); align-items: center; justify-content: center; text-align: center;
+  }
+  .error-inner { max-width: 460px; padding: 48px; }
+  .error-icon { font-size: 48px; margin-bottom: 24px; }
+  .error-title { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--white); margin-bottom: 14px; }
+  .error-msg { font-size: 15px; color: rgba(255,255,255,0.55); line-height: 1.7; }
+
+  /* RESPONSIVE */
+  @media (max-width: 860px) {
+    .survey-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .survey-main { padding: 24px 20px; }
+    .q-card { padding: 24px 20px; }
+    .topbar { padding: 14px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div id="screen-welcome" class="screen active">
+  <div class="topbar" style="background:rgba(10,22,40,0.7); border-bottom-color:rgba(201,168,76,0.3);">
+    <div class="topbar-brand">
+      <div class="topbar-logo">G</div>
+      <div>
+        <div class="topbar-title">Grupo Bolsa Mexicana de Valores</div>
+        <div class="topbar-sub">Factor Humano</div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+    <div class="welcome-inner">
+      <div class="welcome-badge">Factor Humano · Análisis de Roles</div>
+      <div class="welcome-greeting">Hola,</div>
+      <div class="welcome-name" id="w-name">…</div>
+      <div class="welcome-desc">
+        Queremos conocer tu perspectiva sobre la operación de algunos puestos que conoces bien.
+      </div>
+      <div class="welcome-meta">
+        Son preguntas breves y ejecutivas. No hay respuestas correctas o incorrectas — solo nos interesa tu visión operativa real.
+      </div>
+      <div class="welcome-jobs" id="w-jobs"></div>
+      <button class="btn-start" onclick="startSurvey()">Comenzar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SURVEY -->
+<div id="screen-survey" class="screen">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">G</div>
+      <div>
+        <div class="topbar-title">Grupo Bolsa Mexicana de Valores</div>
+        <div class="topbar-sub">Factor Humano</div>
+      </div>
+    </div>
+  </div>
+  <div class="survey-layout">
+    <div class="sidebar">
+      <div>
+        <div class="sidebar-leader-label">Respondiendo:</div>
+        <div class="sidebar-leader-name" id="s-leader-name"></div>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div>
+        <div class="sidebar-section">Puestos</div>
+        <div id="s-job-list"></div>
+      </div>
+      <div class="sidebar-progress">
+        <div class="progress-row">
+          <span>Progreso</span>
+          <span id="s-pct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="s-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="survey-main">
+      <div class="survey-main-inner" id="s-main"></div>
+    </div>
+  </div>
+</div>
+
+<!-- THANKS -->
+<div id="screen-thanks" class="screen">
+  <div class="topbar" style="background:rgba(255,255,255,0.04); border-bottom-color:rgba(201,168,76,0.2);">
+    <div class="topbar-brand">
+      <div class="topbar-logo">G</div>
+      <div><div class="topbar-title">Grupo Bolsa Mexicana de Valores</div></div>
+    </div>
+  </div>
+  <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+    <div class="thanks-inner">
+      <div class="thanks-check">✓</div>
+      <div class="thanks-title">¡Gracias por tu tiempo!</div>
+      <div class="thanks-body">
+        Tu perspectiva es muy valiosa. La información que compartiste le servirá al equipo de Factor Humano para seguir mejorando la forma en que gestionamos el desarrollo y las condiciones de trabajo de nuestros colaboradores.
+      </div>
+      <div class="thanks-close">Ya puedes cerrar esta ventana.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div id="screen-error" class="screen">
+  <div class="topbar" style="background:var(--navy); border-bottom-color:rgba(201,168,76,0.3);">
+    <div class="topbar-brand">
+      <div class="topbar-logo">G</div>
+      <div><div class="topbar-title">Grupo Bolsa Mexicana de Valores</div></div>
+    </div>
+  </div>
+  <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+    <div class="error-inner">
+      <div class="error-icon">⚠️</div>
+      <div class="error-title">Este enlace no es válido</div>
+      <div class="error-msg">El enlace que recibiste parece estar incompleto o expirado. Por favor contacta al equipo de Factor Humano para que te envíen uno nuevo.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════
+// STATE
+// ══════════════════════
+const S = {
+  leaderName: '',
+  leaderEmail: '',
+  jobs: [],
+  jobIdx: 0,
+  qIdx: 0
+};
+
+// ══════════════════════
+// INIT — LOAD FROM URL
+// ══════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+
+  let payload = null;
+
+  if (params.get('d')) {
+    try {
+      payload = JSON.parse(decodeURIComponent(escape(atob(params.get('d')))));
+    } catch(e) { showScreen('error'); return; }
+  } else if (params.get('k')) {
+    try {
+      const stored = localStorage.getItem(params.get('k'));
+      if (!stored) { showScreen('error'); return; }
+      payload = JSON.parse(stored);
+    } catch(e) { showScreen('error'); return; }
+  } else {
+    showScreen('error'); return;
+  }
+
+  if (!payload || !payload.jobs || !payload.leaderName) { showScreen('error'); return; }
+
+  S.leaderName  = payload.leaderName;
+  S.leaderEmail = payload.leaderEmail || '';
+  S.jobs = payload.jobs.map(j => ({ ...j, answers: {}, scores: {}, completed: false }));
+
+  // Welcome screen
+  document.getElementById('w-name').textContent = S.leaderName;
+  const jobsEl = document.getElementById('w-jobs');
+  jobsEl.innerHTML = `<div class="welcome-jobs-title">Puestos a revisar</div>` +
+    S.jobs.map(j => `
+      <div class="welcome-job-item">
+        <div class="job-dot"></div>
+        <span>${j.jobName}</span>
+      </div>`).join('');
+});
+
+function startSurvey() {
+  S.jobIdx = 0;
+  S.qIdx = 0;
+  document.getElementById('s-leader-name').textContent = S.leaderName;
+  showScreen('survey');
+  renderSidebar();
+  renderQuestion();
+}
+
+// ══════════════════════
+// SIDEBAR
+// ══════════════════════
+function renderSidebar() {
+  const list = document.getElementById('s-job-list');
+  list.innerHTML = S.jobs.map((j, i) => {
+    const answered = Object.keys(j.answers).length;
+    const total = j.questions.length;
+    let cls = '';
+    if (j.completed) cls = 'done';
+    else if (i === S.jobIdx) cls = 'active';
+    return `
+      <div class="sidebar-job ${cls}">
+        <div class="sidebar-job-name">${j.jobName}</div>
+        <div class="sidebar-job-status">
+          ${j.completed ? '✓ Completado' : (i === S.jobIdx ? `Pregunta ${answered + 1} de ${total}` : 'Pendiente')}
+        </div>
+      </div>`;
+  }).join('');
+
+  const totalQ = S.jobs.reduce((s, j) => s + j.questions.length, 0);
+  const doneQ  = S.jobs.reduce((s, j) => s + Object.keys(j.answers).length, 0);
+  const pct = totalQ > 0 ? Math.round(doneQ / totalQ * 100) : 0;
+  document.getElementById('s-fill').style.width = pct + '%';
+  document.getElementById('s-pct').textContent = pct + '%';
+}
+
+// ══════════════════════
+// RENDER QUESTION
+// ══════════════════════
+function renderQuestion() {
+  const job = S.jobs[S.jobIdx];
+  if (!job) { finishAll(); return; }
+  const q = job.questions[S.qIdx];
+  const main = document.getElementById('s-main');
+
+  const isFirst = S.qIdx === 0;
+  const isLastQ = S.qIdx === job.questions.length - 1;
+  const isLastJob = S.jobIdx === S.jobs.length - 1;
+  const isFinish = isLastQ && isLastJob;
+
+  const headerHTML = isFirst ? `
+    <div class="job-header">
+      <div class="job-eyebrow">Puesto ${S.jobIdx + 1} de ${S.jobs.length}</div>
+      <div class="job-title">${job.jobName}</div>
+      <div class="job-summary">${job.jobSummary || ''}</div>
+    </div>` : '';
+
+  let inputHTML = '';
+  const ans = job.answers[q.id];
+
+  if (q.type === 'single') {
+    inputHTML = `<div class="options">` +
+      q.options.map((o, i) => `
+        <div class="opt ${ans === i ? 'sel' : ''}" onclick="pickSingle('${q.id}', ${i})">
+          <div class="opt-radio"></div>
+          <div class="opt-label">${o}</div>
+        </div>`).join('') +
+      `</div>`;
+  } else if (q.type === 'scale') {
+    inputHTML = `
+      <div class="scale-wrap">
+        <div class="scale-ends">
+          <span>${q.scaleMin || 'Nunca / Nada'}</span>
+          <span>${q.scaleMax || 'Siempre / Todo'}</span>
+        </div>
+        <div class="scale-row">
+          ${[1,2,3,4,5].map(n => `
+            <button class="scale-btn ${ans === n ? 'sel' : ''}" onclick="pickScale('${q.id}', ${n})">${n}</button>
+          `).join('')}
+        </div>
+      </div>`;
+  } else if (q.type === 'multi') {
+    const sel = Array.isArray(ans) ? ans : [];
+    inputHTML = `<div class="multi">` +
+      q.options.map((o, i) => `
+        <div class="multi-opt ${sel.includes(i) ? 'sel' : ''}" onclick="toggleMulti('${q.id}', ${i})">
+          <div class="multi-check"></div>
+          <div class="opt-label">${o}</div>
+        </div>`).join('') +
+      `</div>`;
+  }
+
+  const hasAns = checkAnswer(job, q);
+
+  main.innerHTML = headerHTML + `
+    <div class="q-card">
+      <div class="q-num">Pregunta ${S.qIdx + 1} de ${job.questions.length}</div>
+      <div class="q-text">${q.text}</div>
+      ${inputHTML}
+    </div>
+    <div class="q-nav">
+      <button class="btn-back" onclick="goBack()" ${(S.qIdx === 0 && S.jobIdx === 0) ? 'disabled' : ''}>← Anterior</button>
+      <button class="btn-next ${isFinish ? 'finish' : ''}" id="btn-next" onclick="goNext()" ${hasAns ? '' : 'disabled'}>
+        ${isFinish ? 'Enviar respuestas ✓' : (isLastQ ? 'Siguiente puesto →' : 'Continuar →')}
+      </button>
+    </div>`;
+
+  renderSidebar();
+}
+
+function checkAnswer(job, q) {
+  const a = job.answers[q.id];
+  if (q.type === 'multi') return Array.isArray(a) && a.length > 0;
+  return a !== undefined && a !== null;
+}
+
+function pickSingle(qId, idx) {
+  S.jobs[S.jobIdx].answers[qId] = idx;
+  renderQuestion();
+}
+function pickScale(qId, val) {
+  S.jobs[S.jobIdx].answers[qId] = val;
+  renderQuestion();
+}
+function toggleMulti(qId, idx) {
+  const job = S.jobs[S.jobIdx];
+  if (!Array.isArray(job.answers[qId])) job.answers[qId] = [];
+  const pos = job.answers[qId].indexOf(idx);
+  if (pos > -1) job.answers[qId].splice(pos, 1);
+  else job.answers[qId].push(idx);
+  renderQuestion();
+}
+
+function goNext() {
+  const job = S.jobs[S.jobIdx];
+  const isLastQ = S.qIdx === job.questions.length - 1;
+
+  if (isLastQ) {
+    calcScores(job);
+    job.completed = true;
+    if (S.jobIdx < S.jobs.length - 1) {
+      S.jobIdx++;
+      S.qIdx = 0;
+      showTransition();
+    } else {
+      finishAll();
+    }
+  } else {
+    S.qIdx++;
+    renderQuestion();
+  }
+}
+
+function goBack() {
+  if (S.qIdx > 0) {
+    S.qIdx--;
+    renderQuestion();
+  } else if (S.jobIdx > 0) {
+    S.jobIdx--;
+    const prev = S.jobs[S.jobIdx];
+    prev.completed = false;
+    S.qIdx = prev.questions.length - 1;
+    renderQuestion();
+  }
+}
+
+function showTransition() {
+  const next = S.jobs[S.jobIdx];
+  const main = document.getElementById('s-main');
+  main.innerHTML = `
+    <div class="transition-card">
+      <h3>¡Listo con ese puesto!</h3>
+      <p>Ahora pasamos al siguiente.<br>
+      <strong style="color:var(--gold-light)">${next.jobName}</strong></p>
+    </div>
+    <div class="q-nav" style="justify-content:flex-end">
+      <button class="btn-next" onclick="renderQuestion()">Continuar →</button>
+    </div>`;
+  renderSidebar();
+}
+
+// ══════════════════════
+// SCORING
+// ══════════════════════
+function calcScores(job) {
+  const buckets = { digitalizacion:[], seguridad:[], criticidad:[], autonomia:[], sincronia:[] };
+
+  job.questions.forEach(q => {
+    const a = job.answers[q.id];
+    if (a === undefined || a === null) return;
+    let sc = null;
+    if (q.type === 'single' && q.scoring && typeof a === 'number') sc = q.scoring[a] ?? null;
+    if (q.type === 'scale' && q.scoring && typeof a === 'number') sc = q.scoring[a-1] ?? null;
+    if (q.type === 'multi' && q.scoring && Array.isArray(a) && a.length > 0)
+      sc = a.reduce((s,i) => s + (q.scoring[i] ?? 0), 0) / a.length;
+    if (sc !== null && buckets[q.variable]) buckets[q.variable].push(sc);
+  });
+
+  const avg = v => buckets[v].length > 0 ? buckets[v].reduce((a,b)=>a+b,0)/buckets[v].length : 50;
+  const d=avg('digitalizacion'), s=avg('seguridad'), c=avg('criticidad'), a=avg('autonomia'), sy=avg('sincronia');
+  const final = d*0.25 + s*0.25 + c*0.30 + a*0.10 + sy*0.10;
+
+  let modal = final<=40 ? 'Presencial' : final<=55 ? 'Híbrido 4x1' : final<=65 ? 'Híbrido 3x2' : final<=75 ? 'Híbrido flexible' : 'Remoto';
+  job.scores = { digitalizacion:d, seguridad:s, criticidad:c, autonomia:a, sincronia:sy, final, modal };
+}
+
+// ══════════════════════
+// FINISH
+// ══════════════════════
+function finishAll() {
+  exportJSON();
+  showScreen('thanks');
+}
+
+function exportJSON() {
+  const now = new Date().toISOString();
+  const allScores = S.jobs.flatMap(j => j.questions.map(q => {
+    const a = j.answers[q.id];
+    if (q.type==='single'&&q.scoring&&typeof a==='number') return q.scoring[a]??null;
+    if (q.type==='scale'&&q.scoring&&typeof a==='number') return q.scoring[a-1]??null;
+    return null;
+  }).filter(x=>x!==null));
+  const globalAvg = allScores.length>0 ? allScores.reduce((a,b)=>a+b,0)/allScores.length : 50;
+
+  const output = {
+    lider_respondiente: S.leaderName,
+    correo: S.leaderEmail,
+    fecha_respuesta: now,
+    puestos: S.jobs.map(j => ({
+      puesto: j.jobName,
+      resumen_puesto: j.jobSummary,
+      score_por_variable: {
+        digitalizacion: Math.round(j.scores?.digitalizacion??0),
+        seguridad: Math.round(j.scores?.seguridad??0),
+        criticidad: Math.round(j.scores?.criticidad??0),
+        autonomia: Math.round(j.scores?.autonomia??0),
+        sincronia: Math.round(j.scores?.sincronia??0)
+      },
+      score_ponderado_final: Math.round(j.scores?.final??0),
+      modalidad_sugerida: j.scores?.modal||'N/D',
+      flags: {
+        posible_sesgo: globalAvg > 88 || globalAvg < 12,
+        preguntas_sin_respuesta: j.questions.filter(q=>j.answers[q.id]===undefined).length
+      },
+      preguntas_y_respuestas: j.questions.map(q => {
+        const a = j.answers[q.id];
+        let at = a;
+        if (q.type==='single'&&typeof a==='number') at = q.options[a]||a;
+        if (q.type==='scale'&&typeof a==='number') at = `${a}/5`;
+        if (q.type==='multi'&&Array.isArray(a)) at = a.map(i=>q.options[i]).join(', ');
+        let sc = null;
+        if (q.type==='single'&&q.scoring&&typeof a==='number') sc = q.scoring[a]??null;
+        if (q.type==='scale'&&q.scoring&&typeof a==='number') sc = q.scoring[a-1]??null;
+        return { id:q.id, variable:q.variable, es_calibracion:q.isCalibration||false, pregunta:q.text, respuesta:at, score:sc };
+      })
+    })),
+    nota: 'Resultado Etapa 2 — pendiente contraste con análisis documental (Etapa 3).'
+  };
+
+  const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  const safeName = S.leaderName.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  a.download = `E2_${safeName}_${now.slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════════
+// SCREENS
+// ══════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`screen-${id}`).classList.add('active');
+}
+</script>
+</body>
+</html>

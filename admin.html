@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GBMV · Panel de Administración — Modalidad de Trabajo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a1628;
+    --navy-mid: #132040;
+    --navy-light: #1e3260;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-pale: #f5ecd4;
+    --cream: #faf7f2;
+    --white: #ffffff;
+    --text: #1a2540;
+    --text-mid: #3d5278;
+    --text-light: #7a8fb5;
+    --border: #dde3f0;
+    --success: #1a7f5a;
+    --success-bg: #eaf6f1;
+    --error: #c0392b;
+    --radius: 12px;
+    --shadow: 0 4px 32px rgba(10,22,40,0.10);
+    --shadow-lg: 0 12px 64px rgba(10,22,40,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed; top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--navy);
+    padding: 18px 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid var(--gold);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 14px; }
+  .topbar-logo {
+    width: 36px; height: 36px; background: var(--gold);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--navy);
+  }
+  .topbar-title { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--white); }
+  .topbar-subtitle { font-size: 11px; color: var(--gold-light); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+  .topbar-badge {
+    font-size: 11px; color: var(--gold); border: 1px solid rgba(201,168,76,0.4);
+    padding: 4px 14px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* LAYOUT */
+  .page { max-width: 820px; margin: 0 auto; padding: 48px 32px; position: relative; z-index: 1; }
+
+  .page-eyebrow {
+    font-size: 11px; font-weight: 600; color: var(--gold);
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .page-heading {
+    font-family: 'Playfair Display', serif; font-size: 36px; color: var(--navy);
+    margin-bottom: 10px; line-height: 1.2;
+  }
+  .page-desc { font-size: 15px; color: var(--text-mid); line-height: 1.6; margin-bottom: 40px; }
+
+  /* CARD */
+  .card {
+    background: var(--white); border-radius: 20px;
+    box-shadow: var(--shadow); padding: 40px;
+    border: 1px solid var(--border);
+    margin-bottom: 28px;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--gold), var(--navy-light));
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600; color: var(--navy);
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-title-num {
+    width: 24px; height: 24px; background: var(--navy);
+    border-radius: 50%; color: var(--gold); font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* FIELDS */
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .field-group { margin-bottom: 20px; }
+  .field-label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--text-mid);
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .field-input {
+    width: 100%; padding: 13px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
+    font-size: 15px; color: var(--text); background: var(--cream);
+    transition: all 0.2s; outline: none;
+  }
+  .field-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.12); background: var(--white); }
+
+  /* UPLOAD */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 28px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--cream); position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--gold); background: var(--gold-pale); }
+  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-label { font-size: 14px; font-weight: 500; color: var(--text-mid); }
+  .upload-hint { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+  .file-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .file-chip {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--navy); color: var(--white);
+    padding: 9px 14px; border-radius: 8px; font-size: 13px;
+  }
+  .file-chip-icon { color: var(--gold); }
+  .file-chip-name { flex: 1; }
+  .file-chip-remove {
+    cursor: pointer; color: rgba(255,255,255,0.4);
+    background: none; border: none; font-size: 18px; line-height: 1; padding: 0;
+    transition: color 0.2s;
+  }
+  .file-chip-remove:hover { color: #e74c3c; }
+
+  /* BUTTONS */
+  .btn-generate {
+    width: 100%; padding: 16px; background: var(--navy); color: var(--white);
+    border: none; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-top: 8px;
+  }
+  .btn-generate:hover { background: var(--navy-mid); }
+  .btn-generate:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-generate.loading { background: var(--navy-mid); }
+
+  /* GENERATED LINKS */
+  .links-section { display: flex; flex-direction: column; gap: 20px; }
+  .link-card {
+    background: var(--white); border-radius: 16px; padding: 28px 32px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    animation: slideUp 0.4s ease;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .link-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+  .link-card-leader { font-size: 18px; font-weight: 600; color: var(--navy); }
+  .link-card-email { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+  .link-card-jobs { font-size: 12px; color: var(--text-mid); margin-bottom: 16px; line-height: 1.6; }
+  .link-card-jobs strong { color: var(--navy); }
+  .link-box {
+    background: var(--cream); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 12px 16px;
+    font-size: 13px; color: var(--text-mid); font-family: monospace;
+    word-break: break-all; margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .link-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-copy, .btn-email {
+    padding: 10px 20px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    border: 1.5px solid var(--border);
+  }
+  .btn-copy { background: var(--navy); color: var(--white); border-color: var(--navy); }
+  .btn-copy:hover { background: var(--navy-mid); }
+  .btn-copy.copied { background: var(--success); border-color: var(--success); }
+  .btn-email { background: var(--white); color: var(--text); }
+  .btn-email:hover { border-color: var(--gold); background: var(--gold-pale); }
+
+  /* JSON DOWNLOAD */
+  .btn-json {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    background: var(--white); color: var(--text-mid);
+    border: 1.5px solid var(--border); cursor: pointer; transition: all 0.2s;
+  }
+  .btn-json:hover { border-color: var(--navy); color: var(--navy); }
+
+  /* SPINNER */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: var(--white); border-radius: 50%;
+    animation: spin 0.8s linear infinite; display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ERROR */
+  .error-msg {
+    background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.25);
+    border-radius: 10px; padding: 13px 16px;
+    font-size: 14px; color: var(--error); margin-top: 16px; display: none;
+  }
+  .error-msg.show { display: block; }
+
+  /* STATUS BADGE */
+  .status-badge {
+    font-size: 11px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 20px;
+  }
+  .status-ready { background: var(--success-bg); color: var(--success); }
+
+  /* INFO BOX */
+  .info-box {
+    background: rgba(10,22,40,0.04); border-left: 3px solid var(--gold);
+    border-radius: 0 10px 10px 0; padding: 16px 20px;
+    font-size: 13px; color: var(--text-mid); line-height: 1.6; margin-bottom: 24px;
+  }
+  .info-box strong { color: var(--navy); }
+
+  .section-divider {
+    height: 1px; background: var(--border); margin: 32px 0;
+  }
+
+  @media (max-width: 700px) {
+    .topbar { padding: 14px 20px; }
+    .page { padding: 28px 20px; }
+    .card { padding: 28px 20px; }
+    .field-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">G</div>
+    <div>
+      <div class="topbar-title">Grupo Bolsa Mexicana de Valores</div>
+      <div class="topbar-subtitle">Modelo de Modalidad de Trabajo</div>
+    </div>
+  </div>
+  <div class="topbar-badge">Panel de Administración</div>
+</div>
+
+<div class="page">
+  <div class="page-eyebrow">Etapa 2 — Herramienta de Input de Líderes</div>
+  <div class="page-heading">Genera los cuestionarios</div>
+  <div class="page-desc">
+    Ingresa los datos del líder, carga las descripciones de puesto y genera un enlace personalizado para enviarle. El líder solo verá el cuestionario, nunca este panel.
+  </div>
+
+  <!-- CARD 1: CONFIG -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-num">1</div>
+      Datos del líder respondiente
+    </div>
+
+    <div class="field-row">
+      <div class="field-group" style="margin-bottom:0">
+        <label class="field-label">Nombre completo</label>
+        <input class="field-input" id="leader-name" type="text" placeholder="Ej. Ing. Carlos Reyes" />
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <label class="field-label">Correo electrónico</label>
+        <input class="field-input" id="leader-email" type="email" placeholder="carlos.reyes@grupobmv.com.mx" />
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD 2: FILES -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-num">2</div>
+      Descripciones de puesto a evaluar
+    </div>
+    <div class="info-box">
+      Carga uno o varios archivos <strong>.docx</strong> con las descripciones de los puestos sobre los que le preguntarás al líder. La IA leerá cada perfil y generará preguntas específicas para ese rol.
+    </div>
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="file-input" accept=".docx,.doc,.txt" multiple />
+      <div class="upload-icon">📄</div>
+      <div class="upload-label">Arrastra los archivos aquí o haz clic para seleccionar</div>
+      <div class="upload-hint">Formato .docx recomendado · Puedes cargar varios puestos a la vez</div>
+    </div>
+    <div class="file-list" id="file-list"></div>
+  </div>
+
+  <!-- CARD 3: API KEY -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-num">3</div>
+      Conexión con la inteligencia artificial
+    </div>
+    <div class="info-box">
+      La herramienta usa Claude (IA de Anthropic) para leer las descripciones de puesto y generar preguntas personalizadas. Necesitas una <strong>API Key</strong> para activarla. Esta clave <strong>no se guarda ni se comparte</strong> — solo se usa en esta sesión de tu navegador.
+    </div>
+    <div class="field-group" style="margin-bottom:0">
+      <label class="field-label">API Key de Anthropic</label>
+      <input class="field-input" id="api-key" type="password" placeholder="sk-ant-api03-..." />
+    </div>
+  </div>
+
+  <div id="error-msg" class="error-msg"></div>
+
+  <button class="btn-generate" id="btn-generate" onclick="generateLinks()">
+    <div class="spinner" id="spinner"></div>
+    <span id="btn-text">Generar cuestionario y enlace →</span>
+  </button>
+
+  <!-- GENERATED LINKS SECTION -->
+  <div id="links-section" style="display:none; margin-top:40px;">
+    <div class="section-divider"></div>
+    <div class="page-eyebrow" style="margin-bottom:8px;">Enlace generado</div>
+    <div class="page-heading" style="font-size:26px; margin-bottom:8px;">Listo para enviar</div>
+    <p style="font-size:14px; color:var(--text-mid); margin-bottom:28px; line-height:1.6;">
+      Copia el enlace y envíalo por correo al líder. Al abrirlo, verá directamente su cuestionario personalizado sin ningún panel de administración.
+    </p>
+    <div class="links-section" id="links-container"></div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════
+// FILE HANDLING
+// ══════════════════════
+const state = { files: [] };
+
+document.getElementById('file-input').addEventListener('change', e => handleFiles(e.target.files));
+const uz = document.getElementById('upload-zone');
+uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('drag-over'); });
+uz.addEventListener('dragleave', () => uz.classList.remove('drag-over'));
+uz.addEventListener('drop', e => { e.preventDefault(); uz.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+
+function handleFiles(files) {
+  for (const f of files) {
+    if (!state.files.find(x => x.name === f.name)) state.files.push(f);
+  }
+  renderFileList();
+}
+function removeFile(i) { state.files.splice(i, 1); renderFileList(); }
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = state.files.map((f, i) => `
+    <div class="file-chip">
+      <span class="file-chip-icon">📄</span>
+      <span class="file-chip-name">${f.name}</span>
+      <button class="file-chip-remove" onclick="removeFile(${i})">×</button>
+    </div>`).join('');
+}
+
+// ══════════════════════
+// READ FILE
+// ══════════════════════
+async function readFileAsText(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const raw = e.target.result || '';
+      // Strip binary noise, keep readable chars
+      const clean = raw.replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, ' ')
+                       .replace(/\s{3,}/g, '  ').trim();
+      resolve(clean.slice(0, 10000));
+    };
+    reader.onerror = () => resolve('(No se pudo leer el archivo)');
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
+// ══════════════════════
+// GENERATE VIA API
+// ══════════════════════
+async function generateLinks() {
+  const name  = document.getElementById('leader-name').value.trim();
+  const email = document.getElementById('leader-email').value.trim();
+  const key   = document.getElementById('api-key').value.trim();
+  const err   = document.getElementById('error-msg');
+
+  err.classList.remove('show');
+
+  if (!name)  { showError('Por favor ingresa el nombre del líder.'); return; }
+  if (!email || !email.includes('@')) { showError('Por favor ingresa un correo electrónico válido.'); return; }
+  if (state.files.length === 0) { showError('Debes cargar al menos un archivo de descripción de puesto.'); return; }
+  if (!key)   { showError('Por favor ingresa tu API Key de Anthropic.'); return; }
+
+  setLoading(true);
+
+  const fileContents = [];
+  for (const f of state.files) {
+    const text = await readFileAsText(f);
+    fileContents.push({ name: f.name, content: text });
+  }
+
+  const systemPrompt = `Eres el motor de inteligencia de una herramienta de evaluación de modalidad de trabajo para el Grupo Bolsa Mexicana de Valores (GBMV).
+
+Tu tarea es generar un cuestionario estructurado y adaptativo para un líder, con el objetivo de determinar la modalidad de trabajo más adecuada (Presencial, Híbrido o Remoto) para cada puesto analizado.
+
+VARIABLES DE EVALUACIÓN Y PONDERACIONES:
+- Digitalización (25%): Qué tan digitalizable es el trabajo del puesto
+- Seguridad y Regulación (25%): Restricciones normativas y de manejo de información
+- Criticidad Operativa (30%): Impacto en la continuidad si el colaborador no está físicamente presente
+- Autonomía Operativa (10%): Capacidad de operar sin supervisión física
+- Sincronía / Interdependencia (10%): Necesidad de coordinación en tiempo real
+
+REGLAS CRÍTICAS:
+1. NUNCA uses las palabras "presencial", "remoto", "híbrido" en las preguntas
+2. NUNCA preguntes de forma obvia (NO: "¿puede trabajar desde casa?", "¿necesita estar en oficina?")
+3. Las preguntas deben ser INDIRECTAS para que el líder no pueda manipular el resultado
+4. Genera entre 8 y 14 preguntas por puesto (las mínimas necesarias para evaluar las 5 variables)
+5. Tono ejecutivo, cercano, en español, pueden ir en primera persona del líder
+6. Incluye al menos 2 preguntas de calibración cuya respuesta sea predecible dado el perfil
+7. Las preguntas deben revelar: dependencia operativa, infraestructura crítica, madurez digital, interdependencia, riesgos regulatorios, autonomía real
+
+REGLAS DE SCORING (0=presencial, 100=remoto):
+- Para variables restrictivas (seguridad, criticidad): puntuación alta = baja restricción = más apto para remoto
+- Para variables habilitadoras (digitalización, autonomía): puntuación alta = más apto para remoto
+- Para sincronía: puntuación alta = baja interdependencia = más apto para remoto
+
+RESPONDE ÚNICAMENTE CON JSON VÁLIDO. Sin texto antes ni después. Sin bloques de código markdown. Solo el objeto JSON.
+
+Estructura exacta:
+{
+  "jobs": [
+    {
+      "jobName": "Nombre del puesto",
+      "jobSummary": "Resumen de 1-2 oraciones del puesto",
+      "questions": [
+        {
+          "id": "P01",
+          "text": "Texto de la pregunta",
+          "type": "single",
+          "options": ["Opción A", "Opción B", "Opción C", "Opción D"],
+          "scaleMin": null,
+          "scaleMax": null,
+          "variable": "digitalizacion",
+          "scoring": [25, 50, 75, 100],
+          "isCalibration": false
+        }
+      ]
+    }
+  ]
+}
+
+Para type="scale": options=["1","2","3","4","5"], scoring tiene 5 valores, scaleMin y scaleMax son etiquetas de texto.
+Para type="single": scoring tiene un valor por opción (0-100).
+Para type="multi": máximo 3 opciones, scoring tiene un valor por opción.
+variable debe ser exactamente uno de: digitalizacion, seguridad, criticidad, autonomia, sincronia`;
+
+  const userMsg = `Analiza las siguientes descripciones de puesto y genera el cuestionario.
+
+LÍDER: ${name}
+
+ARCHIVOS:
+${fileContents.map((f,i) => `--- ARCHIVO ${i+1}: ${f.name} ---\n${f.content}`).join('\n\n')}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    let raw = data.content.find(c => c.type === 'text')?.text || '';
+
+    // Strip markdown fences if any
+    raw = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+
+    const parsed = JSON.parse(raw);
+    renderLinks(parsed, name, email);
+    setLoading(false);
+
+  } catch(e) {
+    setLoading(false);
+    showError(`Error al generar el cuestionario: ${e.message}. Verifica tu API Key e intenta de nuevo.`);
+  }
+}
+
+// ══════════════════════
+// RENDER LINKS
+// ══════════════════════
+function renderLinks(data, name, email) {
+  const baseUrl = window.location.href.replace('admin.html', 'survey.html');
+  const payload = { leaderName: name, leaderEmail: email, jobs: data.jobs };
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+
+  // Split into chunks if too long for URL (use localStorage as fallback)
+  const surveyUrl = `${baseUrl}?d=${encoded}`;
+  const isTooLong = surveyUrl.length > 8000;
+
+  let finalUrl = surveyUrl;
+  if (isTooLong) {
+    // Store in localStorage with a key
+    const key = 'survey_' + Date.now();
+    localStorage.setItem(key, JSON.stringify(payload));
+    finalUrl = `${baseUrl}?k=${key}`;
+  }
+
+  const jobNames = data.jobs.map(j => j.jobName).join(', ');
+
+  const container = document.getElementById('links-container');
+  container.innerHTML = `
+    <div class="link-card">
+      <div class="link-card-header">
+        <div>
+          <div class="link-card-leader">${name}</div>
+          <div class="link-card-email">${email}</div>
+        </div>
+        <div class="status-badge status-ready">✓ Listo</div>
+      </div>
+      <div class="link-card-jobs">
+        <strong>Puestos a evaluar:</strong> ${jobNames}
+      </div>
+      <div class="link-box" id="link-url">${finalUrl}</div>
+      <div class="link-actions">
+        <button class="btn-copy" id="btn-copy" onclick="copyLink('${finalUrl}')">
+          📋 Copiar enlace
+        </button>
+        <button class="btn-email" onclick="openEmailDraft('${name}', '${email}', '${finalUrl}')">
+          ✉️ Abrir borrador de correo
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('links-section').style.display = 'block';
+  document.getElementById('links-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyLink(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ Copiado';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copiar enlace'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+function openEmailDraft(name, email, url) {
+  const subject = encodeURIComponent('Factor Humano · Tu opinión sobre modalidades de trabajo');
+  const body = encodeURIComponent(
+`Hola ${name},
+
+El equipo de Factor Humano está trabajando en un modelo para entender mejor las necesidades operativas de cada puesto en el Grupo.
+
+Te pedimos unos minutos para compartir tu perspectiva a través del siguiente enlace:
+
+${url}
+
+Es rápido (menos de 10 minutos) e importante para nosotros contar con tu punto de vista.
+
+Muchas gracias,
+Equipo de Factor Humano
+Grupo Bolsa Mexicana de Valores`
+  );
+  window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+}
+
+// ══════════════════════
+// UI HELPERS
+// ══════════════════════
+function setLoading(on) {
+  const btn = document.getElementById('btn-generate');
+  const spinner = document.getElementById('spinner');
+  const txt = document.getElementById('btn-text');
+  btn.disabled = on;
+  spinner.style.display = on ? 'block' : 'none';
+  txt.textContent = on ? 'Generando preguntas, un momento...' : 'Generar cuestionario y enlace →';
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('show');
+  el.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
