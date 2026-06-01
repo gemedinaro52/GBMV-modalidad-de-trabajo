@@ -418,9 +418,9 @@ REGLAS CRÍTICAS:
 2. NUNCA preguntes de forma obvia (NO: "¿puede trabajar desde casa?", "¿necesita estar en oficina?")
 3. Las preguntas deben ser INDIRECTAS para que el líder no pueda manipular el resultado
 4. Genera entre 8 y 14 preguntas por puesto (las mínimas necesarias para evaluar las 5 variables)
-5. Tono ejecutivo, cercano, en español, pueden ir en primera persona del líder
-6. Incluye al menos 2 preguntas de calibración cuya respuesta sea predecible dado el perfil
-7. Las preguntas deben revelar: dependencia operativa, infraestructura crítica, madurez digital, interdependencia, riesgos regulatorios, autonomía real
+5. Tono ejecutivo en español. Preguntas CORTAS máximo 15 palabras. Opciones máximo 7 palabras.
+6. Incluye 2 preguntas de calibración. jobSummary máximo 15 palabras.
+7. Genera máximo 10 preguntas por puesto para mantener el JSON compacto.
 
 REGLAS DE SCORING (0=presencial, 100=remoto):
 - Para variables restrictivas (seguridad, criticidad): puntuación alta = baja restricción = más apto para remoto
@@ -475,7 +475,7 @@ ${fileContents.map((f,i) => `--- ARCHIVO ${i+1}: ${f.name} ---\n${f.content}`).j
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 4000,
+        max_tokens: 8000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userMsg }]
       })
