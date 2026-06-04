@@ -451,7 +451,7 @@ REGLAS ABSOLUTAS:
 - PROHIBIDO que las opciones sean obviamente "buenas" o "malas" para un resultado — deben parecer igualmente válidas
 - Las preguntas deben sonar como una encuesta sobre gestión operativa y efectividad del puesto, no sobre modalidad de trabajo
 - Exactamente 10 preguntas por puesto
-- Usa tipos: "single" (4 opciones), "scale" (1-5 con etiquetas neutras), "multi" (3 opciones)
+- Usa tipos: "single" (4 opciones), "scale" (1-5), "multi" (3 opciones). Para type="scale" scaleMin y scaleMax son OBLIGATORIOS y deben describir qué significa el 1 y el 5 en esa pregunta específica (ej: scaleMin="Nunca ocurre", scaleMax="Ocurre diariamente"). NUNCA dejes scaleMin o scaleMax como null.
 - Preguntas max 18 palabras. Opciones max 8 palabras.
 - 2 preguntas deben ser de calibración (respuesta predecible dado el perfil del puesto)
 
@@ -620,7 +620,13 @@ Muchas gracias,
 Equipo de Factor Humano
 Grupo Bolsa Mexicana de Valores`
   );
-  window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+  // Try Gmail web first, fallback to mailto
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(email)}&su=${subject}&body=${body}`;
+  const win = window.open(gmailUrl, '_blank');
+  if (!win) {
+    // Popup blocked — fallback to mailto
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  }
 }
 
 // ══════════════════════

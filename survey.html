@@ -595,8 +595,17 @@ function renderQuestion() {
         </div>`).join('') +
       `</div>`;
   } else if (q.type === 'scale') {
-    const scaleMin = q.scaleMin || 'Menor grado';
-    const scaleMax = q.scaleMax || 'Mayor grado';
+    // Fallback labels by variable if IA returned null
+    const fallbacks = {
+      digitalizacion: ['Casi nunca / muy poco', 'Casi siempre / casi todo'],
+      seguridad:      ['Muy baja restricción', 'Muy alta restricción'],
+      criticidad:     ['Impacto muy bajo', 'Impacto muy alto'],
+      autonomia:      ['Requiere supervisión constante', 'Opera con total autonomía'],
+      sincronia:      ['Coordinación muy esporádica', 'Coordinación constante en tiempo real']
+    };
+    const fb = fallbacks[q.variable] || ['Menor grado', 'Mayor grado'];
+    const scaleMin = (q.scaleMin && q.scaleMin !== 'null' && q.scaleMin.trim() !== '') ? q.scaleMin : fb[0];
+    const scaleMax = (q.scaleMax && q.scaleMax !== 'null' && q.scaleMax.trim() !== '') ? q.scaleMax : fb[1];
     inputHTML = `
       <div class="scale-wrap">
         <div class="scale-row">
