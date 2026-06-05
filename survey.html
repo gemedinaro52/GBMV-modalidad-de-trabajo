@@ -487,26 +487,36 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   let payload = null;
 
-  if (params.get('np')) {
-    // Short URL via npoint.io
-    try {
-      const binId = params.get('np');
-      const res = await fetch(`https://api.npoint.io/${binId}`);
-      if (!res.ok) throw new Error('npoint bin not found');
-      payload = await res.json();
-    } catch(e) { showScreen('error'); return; }
-  } else if (params.get('sk')) {
-    // sessionStorage fallback (same browser/tab only)
-    try {
-      const stored = sessionStorage.getItem(params.get('sk'));
-      if (!stored) throw new Error('not found');
-      payload = JSON.parse(stored);
-    } catch(e) { showScreen('error'); return; }
-  } else if (params.get('d')) {
-    // Base64 URL fallback
+  if (params.get('d')) {
     try {
       const decoded = decodeURIComponent(escape(atob(params.get('d'))));
-      payload = JSON.parse(decoded);
+      const raw = JSON.parse(decoded);
+
+      // Decompress if using short keys
+      if (raw.n && raw.j) {
+        payload = {
+          leaderName: raw.n,
+          leaderEmail: raw.e || '',
+          jobs: raw.j.map(job => ({
+            jobName: job.n,
+            jobSummary: job.s,
+            questions: job.q.map(q => ({
+              id: q.i,
+              text: q.t,
+              type: q.y,
+              options: q.o,
+              scaleMin: q.a || null,
+              scaleMax: q.b || null,
+              variable: q.v,
+              scoring: q.c,
+              isCalibration: q.k === 1
+            }))
+          }))
+        };
+      } else {
+        // Already in full format
+        payload = raw;
+      }
     } catch(e) { showScreen('error'); return; }
   } else {
     showScreen('error'); return;

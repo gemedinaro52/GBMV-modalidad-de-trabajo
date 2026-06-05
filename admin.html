@@ -536,14 +536,49 @@ function stripPayload(data) {
   };
 }
 
-async function renderLinks(data, name, email) {
+function renderLinks(data, name, email) {
   const baseUrl = window.location.href.replace('admin.html', 'survey.html');
   const payload = { leaderName: name, leaderEmail: email, jobs: stripPayload(data).jobs };
   const jobNames = data.jobs.map(j => j.jobName).join(', ');
 
+  // Compress payload by removing verbose keys before encoding
+  function compressPayload(p) {
+    return {
+      n: p.leaderName,
+      e: p.leaderEmail,
+      j: p.jobs.map(job => ({
+        n: job.jobName,
+        s: job.jobSummary,
+        q: job.questions.map(q => ({
+          i: q.id,
+          t: q.text,
+          y: q.type,
+          o: q.options,
+          a: q.scaleMin || '',
+          b: q.scaleMax || '',
+          v: q.variable,
+          c: q.scoring,
+          k: q.isCalibration ? 1 : 0
+        }))
+      }))
+    };
+  }
+
+  const compressed = compressPayload(payload);
+  const json = JSON.stringify(compressed);
+  const encoded = btoa(unescape(encodeURIComponent(json)));
+  const finalUrl = `${baseUrl}?d=${encoded}`;
+
   const container = document.getElementById('links-container');
 
-  // Show saving indicator
+  const lenNote = finalUrl.length > 6000
+    ? `<div style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.4);border-radius:10px;padding:12px 16px;font-size:13px;color:#8a6820;margin-bottom:14px;">
+        ℹ️ Enlace de ${finalUrl.length} caracteres. Usa el botón <strong>"Abrir borrador de correo"</strong> para enviarlo — no lo pegues manualmente en el cuerpo del mensaje.
+       </div>`
+    : `<div style="background:var(--success-bg);border:1px solid rgba(26,127,90,0.3);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--success);margin-bottom:14px;">
+        ✓ Enlace listo — puedes copiarlo y pegarlo en cualquier correo.
+       </div>`;
+
   container.innerHTML = `
     <div class="link-card" style="text-align:center; padding:40px;">
       <div style="font-size:28px; margin-bottom:16px;">☁️</div>
@@ -603,8 +638,7 @@ async function renderLinks(data, name, email) {
       <div class="link-card-jobs">
         <strong>Puestos a evaluar:</strong> ${jobNames}
       </div>
-      ${successNote}
-      ${lenWarning}
+      ${lenNote}
       <input type="text" id="link-url-input" value="${finalUrl}"
         style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;
                font-family:monospace;font-size:12px;color:var(--text-mid);background:var(--cream);
