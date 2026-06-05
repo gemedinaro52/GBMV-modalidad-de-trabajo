@@ -482,28 +482,26 @@ const S = {
 // ══════════════════════
 // INIT — LOAD FROM URL
 // ══════════════════════
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
 
   let payload = null;
 
-  if (params.get('d')) {
+  if (params.get('bin')) {
+    // Short URL via JSONBin — fetch from cloud
     try {
-      // Try standard base64 decode first
+      const binId = params.get('bin');
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`);
+      if (!res.ok) throw new Error('Bin not found');
+      const data = await res.json();
+      payload = data.record;
+    } catch(e) {
+      showScreen('error'); return;
+    }
+  } else if (params.get('d')) {
+    try {
       const decoded = decodeURIComponent(escape(atob(params.get('d'))));
       payload = JSON.parse(decoded);
-    } catch(e) { showScreen('error'); return; }
-  } else if (params.get('k')) {
-    try {
-      // Fallback: localStorage key (same browser only)
-      const stored = localStorage.getItem(params.get('k'));
-      if (!stored) {
-        // Show a more helpful error for cross-device links
-        document.querySelector('#screen-error .error-title').textContent = 'Este enlace no se puede abrir aquí';
-        document.querySelector('#screen-error .error-msg').textContent = 'El enlace que recibiste fue generado en otra computadora y no puede abrirse en este dispositivo. Por favor pide al equipo de Factor Humano que te envíe un enlace nuevo.';
-        showScreen('error'); return;
-      }
-      payload = JSON.parse(stored);
     } catch(e) { showScreen('error'); return; }
   } else {
     showScreen('error'); return;
